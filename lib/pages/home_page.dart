@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 
+import '../data/favoritos.dart';
 import '../data/receitas_teste.dart';
-import 'detalhes_page.dart';
+import '../widgets/card_receita.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+  const HomePage({super.key, required this.favoritos});
+
+  final Favoritos favoritos;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -157,64 +160,7 @@ class _HomePageState extends State<HomePage> {
 
           // Cards de exemplo
           for (final receita in encontradas)
-            Card(
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => DetalhesPage(receita: receita),
-                    ),
-                  );
-                },
-                child: Row(
-                  children: [
-                    Container(
-                      width: 96,
-                      height: 96,
-                      color: cores.primaryContainer,
-                      child: Icon(
-                        Icons.restaurant,
-                        size: 40,
-                        color: cores.onPrimaryContainer,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              receita.nome,
-                              style: textos.titleMedium,
-                              maxLines: 2,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 4),
-                            Text(receita.tempoEDificuldade),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 18,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(receita.avaliacaoTexto),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+            CardReceita(receita: receita, favoritos: widget.favoritos),
           if (termoBuscado != null && encontrou) ...[
             const SizedBox(height: 12),
             OutlinedButton(
@@ -222,22 +168,6 @@ class _HomePageState extends State<HomePage> {
               child: const Text('Limpar pesquisa'),
             ),
           ],
-        ],
-      ),
-      // Barra inferior das telas de referência
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Explorar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Favoritos',
-          ),
         ],
       ),
     );

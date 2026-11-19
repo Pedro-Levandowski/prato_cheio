@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
+import 'pages/principal_page.dart';
 
 void main() {
   runApp(const PratoCheioApp());
@@ -17,7 +17,7 @@ class PratoCheioApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE65100)),
         useMaterial3: true,
       ),
-      home: const HomePage(),
+      home: const PrincipalPage(),
     );
   }
 }

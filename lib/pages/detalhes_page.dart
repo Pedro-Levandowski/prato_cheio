@@ -1,11 +1,18 @@
 import 'package:flutter/material.dart';
 
+import '../data/favoritos.dart';
 import '../models/receita.dart';
+import '../widgets/card_receita.dart';
 
 class DetalhesPage extends StatelessWidget {
-  const DetalhesPage({super.key, required this.receita});
+  const DetalhesPage({
+    super.key,
+    required this.receita,
+    required this.favoritos,
+  });
 
   final Receita receita;
+  final Favoritos favoritos;
 
   @override
   Widget build(BuildContext context) {
@@ -18,7 +25,10 @@ class DetalhesPage extends StatelessWidget {
     ].join(' • ');
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Receita')),
+      appBar: AppBar(
+        title: const Text('Receita'),
+        actions: [BotaoFavorito(receita: receita, favoritos: favoritos)],
+      ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
@@ -59,6 +69,15 @@ class DetalhesPage extends StatelessWidget {
                     rotulo: 'porções',
                   ),
                 ),
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: favoritos,
+                  builder: (context, _) => InfoReceita(
+                    valor: favoritos.contem(receita) ? 'Salva' : 'Não salva',
+                    rotulo: 'nos favoritos',
+                  ),
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 24),
