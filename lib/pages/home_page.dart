@@ -1,19 +1,7 @@
 import 'package:flutter/material.dart';
 
-class Receita {
-  final String nome;
-  final String tempoDificuldade;
-  final String avaliacao;
-
-  const Receita(this.nome, this.tempoDificuldade, this.avaliacao);
-}
-
-const receitas = [
-  Receita('Pizza de Margherita', '35 min • Fácil', '4,6 / 5'),
-  Receita('Bolo de Cenoura', '50 min • Fácil', '4,8 / 5'),
-  Receita('Frango Xadrez', '40 min • Médio', '4,5 / 5'),
-  Receita('Feijoada Completa', '180 min • Difícil', '4,9 / 5'),
-];
+import '../data/receitas_teste.dart';
+import 'detalhes_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +12,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final busca = TextEditingController();
+  final foco = FocusNode();
   String? mensagemErro;
   String? termoBuscado;
 
@@ -58,9 +47,18 @@ class _HomePageState extends State<HomePage> {
     });
   }
 
+  void alterarPesquisa() {
+    foco.requestFocus();
+    busca.selection = TextSelection(
+      baseOffset: 0,
+      extentOffset: busca.text.length,
+    );
+  }
+
   @override
   void dispose() {
     busca.dispose();
+    foco.dispose();
     super.dispose();
   }
 
@@ -86,6 +84,7 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 16),
           TextField(
             controller: busca,
+            focusNode: foco,
             textInputAction: TextInputAction.search,
             decoration: InputDecoration(
               labelText: 'Buscar pelo nome',
@@ -110,75 +109,113 @@ class _HomePageState extends State<HomePage> {
           const SizedBox(height: 24),
 
           // Listagem
-          Text(
-            termoBuscado == null
-                ? 'Receitas disponíveis'
-                : encontrou
-                ? 'Resultados para “$termoBuscado”'
-                : 'Nenhum resultado para “$termoBuscado”',
-            style: textos.titleLarge,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            termoBuscado == null
-                ? 'Selecione uma receita para ver o preparo.'
-                : encontrou
-                ? 'Toque na receita para ver o preparo.'
-                : 'Não encontramos receitas para esse nome. Tente outro termo.',
-          ),
-          const SizedBox(height: 12),
+          if (!encontrou) ...[
+            const SizedBox(height: 8),
+            Center(
+              child: CircleAvatar(
+                radius: 48,
+                backgroundColor: cores.secondaryContainer,
+                child: Icon(
+                  Icons.search_off,
+                  size: 40,
+                  color: cores.onSecondaryContainer,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            Text('Nenhum resultado', style: textos.headlineSmall),
+            const SizedBox(height: 8),
+            Text(
+              'Não encontramos receitas para “$termoBuscado”. '
+              'Tente outro termo.',
+            ),
+            const SizedBox(height: 24),
+            FilledButton(
+              onPressed: alterarPesquisa,
+              child: const Text('Alterar pesquisa'),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              onPressed: limparBusca,
+              child: const Text('Ver todas as receitas'),
+            ),
+          ] else ...[
+            Text(
+              termoBuscado == null
+                  ? 'Receitas disponíveis'
+                  : 'Resultados para “$termoBuscado”',
+              style: textos.titleLarge,
+            ),
+            const SizedBox(height: 4),
+            Text(
+              termoBuscado == null
+                  ? 'Selecione uma receita para ver o preparo.'
+                  : 'Toque na receita para ver o preparo.',
+            ),
+            const SizedBox(height: 12),
+          ],
 
           // Cards de exemplo
           for (final receita in encontradas)
             Card(
               clipBehavior: Clip.antiAlias,
-              child: Row(
-                children: [
-                  Container(
-                    width: 96,
-                    height: 96,
-                    color: cores.primaryContainer,
-                    child: Icon(
-                      Icons.restaurant,
-                      size: 40,
-                      color: cores.onPrimaryContainer,
+              child: InkWell(
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => DetalhesPage(receita: receita),
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            receita.nome,
-                            style: textos.titleMedium,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(receita.tempoDificuldade),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              const Icon(
-                                Icons.star,
-                                size: 18,
-                                color: Colors.amber,
-                              ),
-                              const SizedBox(width: 4),
-                              Text(receita.avaliacao),
-                            ],
-                          ),
-                        ],
+                  );
+                },
+                child: Row(
+                  children: [
+                    Container(
+                      width: 96,
+                      height: 96,
+                      color: cores.primaryContainer,
+                      child: Icon(
+                        Icons.restaurant,
+                        size: 40,
+                        color: cores.onPrimaryContainer,
                       ),
                     ),
-                  ),
-                ],
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              receita.nome,
+                              style: textos.titleMedium,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 4),
+                            Text(receita.tempoEDificuldade),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                const Icon(
+                                  Icons.star,
+                                  size: 18,
+                                  color: Colors.amber,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(receita.avaliacaoTexto),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
-          if (termoBuscado != null) ...[
+          if (termoBuscado != null && encontrou) ...[
             const SizedBox(height: 12),
             OutlinedButton(
               onPressed: limparBusca,
