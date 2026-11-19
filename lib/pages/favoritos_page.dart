@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../data/favoritos.dart';
 import '../widgets/card_receita.dart';
+import '../widgets/estado_vazio.dart';
 
 class FavoritosPage extends StatelessWidget {
   const FavoritosPage({
@@ -30,27 +31,13 @@ class FavoritosPage extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               children: [
                 const SizedBox(height: 48),
-                Center(
-                  child: CircleAvatar(
-                    radius: 48,
-                    backgroundColor: cores.secondaryContainer,
-                    child: Icon(
-                      Icons.favorite_border,
-                      size: 40,
-                      color: cores.onSecondaryContainer,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 24),
-                Text('Nenhum favorito', style: textos.headlineSmall),
-                const SizedBox(height: 8),
-                const Text(
-                  'Marque uma receita como favorita para encontrá-la aqui.',
-                ),
-                const SizedBox(height: 24),
-                FilledButton(
-                  onPressed: onExplorar,
-                  child: const Text('Explorar receitas'),
+                EstadoVazio(
+                  icone: Icons.favorite_border,
+                  titulo: 'Nenhum favorito',
+                  mensagem:
+                      'Marque uma receita como favorita para encontrá-la aqui.',
+                  textoBotao: 'Explorar receitas',
+                  onBotao: onExplorar,
                 ),
               ],
             );

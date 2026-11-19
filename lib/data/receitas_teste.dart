@@ -1,5 +1,22 @@
 import '../models/receita.dart';
 
+String? validarTermo(String valor) {
+  if (valor.isEmpty) {
+    return 'Digite um nome para pesquisar.';
+  }
+  if (valor.trim().isEmpty) {
+    return 'Só espaços não valem. Digite um nome para pesquisar.';
+  }
+  return null;
+}
+
+List<Receita> buscarReceitas(String termo) {
+  final palavras = termo.toLowerCase().split(RegExp(r'\s+'));
+  return receitas
+      .where((r) => palavras.every(r.nome.toLowerCase().contains))
+      .toList();
+}
+
 const receitas = [
   Receita(
     id: 1,

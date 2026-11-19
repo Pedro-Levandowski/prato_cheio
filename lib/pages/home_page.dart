@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import '../data/favoritos.dart';
 import '../data/receitas_teste.dart';
 import '../widgets/card_receita.dart';
+import '../widgets/estado_vazio.dart';
+import 'pesquisa_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key, required this.favoritos});
@@ -15,161 +17,182 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final busca = TextEditingController();
-  final foco = FocusNode();
   String? mensagemErro;
-  String? termoBuscado;
+  bool carregando = true;
+  bool falhou = false;
+
+  @override
+  void initState() {
+    super.initState();
+    esperarCarregamento();
+  }
+
+  void esperarCarregamento() {
+    Future.delayed(const Duration(seconds: 1), () {
+      if (!mounted) return;
+      setState(() => carregando = false);
+    });
+  }
+
+  void tentarNovamente() {
+    setState(() {
+      carregando = true;
+      falhou = false;
+    });
+    esperarCarregamento();
+  }
 
   void validarBusca(String valor) {
-    setState(() {
-      if (valor.isEmpty) {
-        mensagemErro = 'Digite um nome para pesquisar.';
-      } else if (valor.trim().isEmpty) {
-        mensagemErro = 'Só espaços não valem. Digite um nome para pesquisar.';
-      } else {
-        mensagemErro = null;
-      }
-    });
+    setState(() => mensagemErro = validarTermo(valor));
   }
 
   void buscar() {
     validarBusca(busca.text);
+    if (mensagemErro != null) return;
 
-    if (mensagemErro != null) {
-      setState(() => termoBuscado = null);
-      return;
-    }
-
-    setState(() => termoBuscado = busca.text.trim());
-  }
-
-  void limparBusca() {
-    busca.clear();
-    setState(() {
-      mensagemErro = null;
-      termoBuscado = null;
-    });
-  }
-
-  void alterarPesquisa() {
-    foco.requestFocus();
-    busca.selection = TextSelection(
-      baseOffset: 0,
-      extentOffset: busca.text.length,
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PesquisaPage(
+          favoritos: widget.favoritos,
+          termoInicial: busca.text.trim(),
+        ),
+      ),
     );
   }
 
   @override
   void dispose() {
     busca.dispose();
-    foco.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
-    final palavras = termoBuscado?.toLowerCase().split(RegExp(r'\s+')) ?? [];
-    final encontradas = receitas
-        .where((r) => palavras.every(r.nome.toLowerCase().contains))
-        .toList();
-    final encontrou = encontradas.isNotEmpty;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Prato Cheio'), centerTitle: true),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Pesquisa
-          Text('Receitas', style: textos.headlineMedium),
-          const SizedBox(height: 4),
-          const Text('Pesquise uma receita pelo nome.'),
-          const SizedBox(height: 16),
-          TextField(
-            controller: busca,
-            focusNode: foco,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              labelText: 'Buscar pelo nome',
-              errorText: mensagemErro,
-              errorMaxLines: 2,
-              prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
+          if (carregando)
+            const Carregando()
+          else if (falhou) ...[
+            const SizedBox(height: 48),
+            EstadoVazio(
+              icone: Icons.priority_high,
+              titulo: 'Não foi possível carregar as receitas.',
+              mensagem: 'Verifique sua conexão e tente novamente.',
+              textoBotao: 'Tentar novamente',
+              onBotao: tentarNovamente,
             ),
-            onChanged: validarBusca,
-            onSubmitted: (_) => buscar(),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
+          ] else ...[
+            // Pesquisa
+            Text('Receitas', style: textos.headlineMedium),
+            const SizedBox(height: 4),
+            const Text('Pesquise uma receita pelo nome.'),
+            const SizedBox(height: 16),
+            TextField(
+              controller: busca,
+              textInputAction: TextInputAction.search,
+              decoration: InputDecoration(
+                labelText: 'Buscar pelo nome',
+                errorText: mensagemErro,
+                errorMaxLines: 2,
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(16)),
+                ),
+              ),
+              onChanged: validarBusca,
+              onSubmitted: (_) => buscar(),
+            ),
+            const SizedBox(height: 12),
+            FilledButton(
               onPressed: buscar,
               child: const Text('Buscar receitas'),
             ),
-          ),
-          const SizedBox(height: 24),
+            const SizedBox(height: 24),
 
-          // Listagem
-          if (!encontrou) ...[
-            const SizedBox(height: 8),
-            Center(
-              child: CircleAvatar(
-                radius: 48,
-                backgroundColor: cores.secondaryContainer,
-                child: Icon(
-                  Icons.search_off,
-                  size: 40,
-                  color: cores.onSecondaryContainer,
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text('Nenhum resultado', style: textos.headlineSmall),
-            const SizedBox(height: 8),
-            Text(
-              'Não encontramos receitas para “$termoBuscado”. '
-              'Tente outro termo.',
-            ),
-            const SizedBox(height: 24),
-            FilledButton(
-              onPressed: alterarPesquisa,
-              child: const Text('Alterar pesquisa'),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: limparBusca,
-              child: const Text('Ver todas as receitas'),
-            ),
-          ] else ...[
-            Text(
-              termoBuscado == null
-                  ? 'Receitas disponíveis'
-                  : 'Resultados para “$termoBuscado”',
-              style: textos.titleLarge,
-            ),
+            // Listagem
+            Text('Receitas disponíveis', style: textos.titleLarge),
             const SizedBox(height: 4),
-            Text(
-              termoBuscado == null
-                  ? 'Selecione uma receita para ver o preparo.'
-                  : 'Toque na receita para ver o preparo.',
-            ),
+            const Text('Selecione uma receita para ver o preparo.'),
             const SizedBox(height: 12),
-          ],
 
-          // Cards de exemplo
-          for (final receita in encontradas)
-            CardReceita(receita: receita, favoritos: widget.favoritos),
-          if (termoBuscado != null && encontrou) ...[
-            const SizedBox(height: 12),
-            OutlinedButton(
-              onPressed: limparBusca,
-              child: const Text('Limpar pesquisa'),
-            ),
+            // Cards
+            for (final receita in receitas)
+              CardReceita(receita: receita, favoritos: widget.favoritos),
           ],
         ],
       ),
+    );
+  }
+}
+
+class Carregando extends StatelessWidget {
+  const Carregando({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final cores = Theme.of(context).colorScheme;
+    final textos = Theme.of(context).textTheme;
+
+    Widget bloco(double largura, double altura) => Container(
+      width: largura,
+      height: altura,
+      decoration: BoxDecoration(
+        color: cores.surfaceContainerHighest,
+        borderRadius: BorderRadius.circular(8),
+      ),
+    );
+
+    Widget cardVazio() => Card(
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Row(
+          children: [
+            bloco(80, 80),
+            const SizedBox(width: 12),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                bloco(160, 14),
+                const SizedBox(height: 10),
+                bloco(110, 14),
+                const SizedBox(height: 22),
+                bloco(70, 14),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text('Explorar receitas', style: textos.headlineMedium),
+        const SizedBox(height: 24),
+        bloco(double.infinity, 48),
+        const SizedBox(height: 24),
+        cardVazio(),
+        cardVazio(),
+        const SizedBox(height: 24),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+            const SizedBox(width: 12),
+            Text('Carregando receitas…', style: textos.bodyMedium),
+          ],
+        ),
+      ],
     );
   }
 }
