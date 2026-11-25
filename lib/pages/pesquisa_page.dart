@@ -2,13 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../data/favoritos.dart';
 import '../data/receitas_teste.dart';
+import '../tema.dart';
+import '../widgets/barra_navegacao.dart';
+import '../widgets/campo_busca.dart';
 import '../widgets/card_receita.dart';
 import '../widgets/estado_vazio.dart';
 
 class PesquisaPage extends StatefulWidget {
-  const PesquisaPage({super.key, required this.favoritos, this.termoInicial});
+  const PesquisaPage({
+    super.key,
+    required this.favoritos,
+    required this.onFavoritos,
+    this.termoInicial,
+  });
 
   final Favoritos favoritos;
+  final VoidCallback onFavoritos;
   final String? termoInicial;
 
   @override
@@ -61,6 +70,11 @@ class _PesquisaPageState extends State<PesquisaPage> {
     );
   }
 
+  void irParaAba(int aba) {
+    Navigator.pop(context);
+    if (aba == 1) widget.onFavoritos();
+  }
+
   @override
   void dispose() {
     busca.dispose();
@@ -70,7 +84,6 @@ class _PesquisaPageState extends State<PesquisaPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
     final encontradas = termoBuscado == null
         ? null
@@ -79,38 +92,29 @@ class _PesquisaPageState extends State<PesquisaPage> {
     return Scaffold(
       appBar: AppBar(title: const Text('Pesquisar receitas')),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           if (encontradas == null) ...[
             Text('Qual receita você procura?', style: textos.headlineSmall),
-            const SizedBox(height: 16),
+            const SizedBox(height: 20),
           ],
-          TextField(
+          CampoBusca(
             controller: busca,
             focusNode: foco,
-            textInputAction: TextInputAction.search,
-            decoration: InputDecoration(
-              labelText: 'Nome da receita',
-              hintText: 'Buscar pelo nome',
-              errorText: mensagemErro,
-              errorMaxLines: 2,
-              prefixIcon: const Icon(Icons.search),
-              border: const OutlineInputBorder(
-                borderRadius: BorderRadius.all(Radius.circular(16)),
-              ),
-            ),
+            mensagemErro: mensagemErro,
             onChanged: validarBusca,
             onSubmitted: (_) => pesquisar(),
           ),
           const SizedBox(height: 12),
           FilledButton(onPressed: pesquisar, child: const Text('Pesquisar')),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           if (encontradas == null)
             Text(
               'Você pode buscar por parte do nome da receita.',
-              style: textos.bodyMedium?.copyWith(color: cores.onSurfaceVariant),
+              style: textos.bodyLarge?.copyWith(color: Cores.texto),
             )
-          else if (encontradas.isEmpty)
+          else if (encontradas.isEmpty) ...[
+            const SizedBox(height: 8),
             EstadoVazio(
               icone: Icons.search_off,
               titulo: 'Nenhum resultado',
@@ -121,15 +125,23 @@ class _PesquisaPageState extends State<PesquisaPage> {
               onBotao: alterarPesquisa,
               textoLink: 'Ver todas as receitas',
               onLink: () => Navigator.pop(context),
-            )
-          else ...[
+            ),
+          ] else ...[
             Text('Resultados para “$termoBuscado”', style: textos.titleLarge),
             const SizedBox(height: 4),
-            const Text('Toque na receita para ver o preparo.'),
+            Text(
+              '${encontradas.length == 1 ? '1 receita encontrada' : '${encontradas.length} receitas encontradas'}. '
+              'Toque na receita para ver o preparo.',
+              style: textos.bodyMedium?.copyWith(color: Cores.texto),
+            ),
             const SizedBox(height: 12),
             for (final receita in encontradas)
-              CardReceita(receita: receita, favoritos: widget.favoritos),
-            const SizedBox(height: 12),
+              CardReceita(
+                receita: receita,
+                favoritos: widget.favoritos,
+                origem: 'pesquisa',
+              ),
+            const SizedBox(height: 20),
             OutlinedButton(
               onPressed: limparPesquisa,
               child: const Text('Limpar pesquisa'),
@@ -137,6 +149,7 @@ class _PesquisaPageState extends State<PesquisaPage> {
           ],
         ],
       ),
+      bottomNavigationBar: BarraNavegacao(abaAtual: 0, onSelecionar: irParaAba),
     );
   }
 }

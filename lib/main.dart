@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'pages/principal_page.dart';
+import 'tema.dart';
 
 void main() {
   runApp(const PratoCheioApp());
@@ -13,10 +14,7 @@ class PratoCheioApp extends StatelessWidget {
     return MaterialApp(
       title: 'Prato Cheio',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFE65100)),
-        useMaterial3: true,
-      ),
+      theme: criarTema(),
       home: const PrincipalPage(),
     );
   }

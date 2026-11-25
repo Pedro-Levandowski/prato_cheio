@@ -2,14 +2,22 @@ import 'package:flutter/material.dart';
 
 import '../data/favoritos.dart';
 import '../data/receitas_teste.dart';
+import '../tema.dart';
+import '../widgets/campo_busca.dart';
 import '../widgets/card_receita.dart';
 import '../widgets/estado_vazio.dart';
+import '../widgets/prato.dart';
 import 'pesquisa_page.dart';
 
 class HomePage extends StatefulWidget {
-  const HomePage({super.key, required this.favoritos});
+  const HomePage({
+    super.key,
+    required this.favoritos,
+    required this.onFavoritos,
+  });
 
   final Favoritos favoritos;
+  final VoidCallback onFavoritos;
 
   @override
   State<HomePage> createState() => _HomePageState();
@@ -20,6 +28,7 @@ class _HomePageState extends State<HomePage> {
   String? mensagemErro;
   bool carregando = true;
   bool falhou = false;
+  String culinariaEscolhida = 'Todas';
 
   @override
   void initState() {
@@ -55,6 +64,7 @@ class _HomePageState extends State<HomePage> {
       MaterialPageRoute(
         builder: (_) => PesquisaPage(
           favoritos: widget.favoritos,
+          onFavoritos: widget.onFavoritos,
           termoInicial: busca.text.trim(),
         ),
       ),
@@ -70,16 +80,28 @@ class _HomePageState extends State<HomePage> {
   @override
   Widget build(BuildContext context) {
     final textos = Theme.of(context).textTheme;
+    final culinarias = [
+      'Todas',
+      ...{for (final r in receitas) r.culinaria ?? 'Outras'},
+    ];
+    final filtradas = culinariaEscolhida == 'Todas'
+        ? receitas
+        : receitas
+              .where((r) => (r.culinaria ?? 'Outras') == culinariaEscolhida)
+              .toList();
+    final destaque = receitas.reduce(
+      (a, b) => (b.avaliacao ?? 0) > (a.avaliacao ?? 0) ? b : a,
+    );
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Prato Cheio'), centerTitle: true),
+      appBar: AppBar(title: const Logo()),
       body: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
         children: [
           if (carregando)
             const Carregando()
           else if (falhou) ...[
-            const SizedBox(height: 48),
+            const SizedBox(height: 56),
             EstadoVazio(
               icone: Icons.priority_high,
               titulo: 'Não foi possível carregar as receitas.',
@@ -89,22 +111,24 @@ class _HomePageState extends State<HomePage> {
             ),
           ] else ...[
             // Pesquisa
-            Text('Receitas', style: textos.headlineMedium),
-            const SizedBox(height: 4),
-            const Text('Pesquise uma receita pelo nome.'),
-            const SizedBox(height: 16),
-            TextField(
-              controller: busca,
-              textInputAction: TextInputAction.search,
-              decoration: InputDecoration(
-                labelText: 'Buscar pelo nome',
-                errorText: mensagemErro,
-                errorMaxLines: 2,
-                prefixIcon: const Icon(Icons.search),
-                border: const OutlineInputBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(16)),
-                ),
+            Text(
+              'Olá!',
+              style: textos.labelLarge?.copyWith(
+                color: Cores.terracota,
+                fontWeight: FontWeight.w700,
               ),
+            ),
+            const SizedBox(height: 2),
+            Text('Receitas', style: textos.headlineMedium),
+            const SizedBox(height: 6),
+            Text(
+              'Pesquise uma receita pelo nome.',
+              style: textos.bodyLarge?.copyWith(color: Cores.texto),
+            ),
+            const SizedBox(height: 20),
+            CampoBusca(
+              controller: busca,
+              mensagemErro: mensagemErro,
               onChanged: validarBusca,
               onSubmitted: (_) => buscar(),
             ),
@@ -113,17 +137,47 @@ class _HomePageState extends State<HomePage> {
               onPressed: buscar,
               child: const Text('Buscar receitas'),
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 32),
+
+            // Destaque
+            Text('Destaque', style: textos.titleLarge),
+            const SizedBox(height: 12),
+            CardDestaque(receita: destaque, favoritos: widget.favoritos),
+            const SizedBox(height: 32),
 
             // Listagem
             Text('Receitas disponíveis', style: textos.titleLarge),
             const SizedBox(height: 4),
-            const Text('Selecione uma receita para ver o preparo.'),
-            const SizedBox(height: 12),
+            Text(
+              'Selecione uma receita para ver o preparo.',
+              style: textos.bodyMedium?.copyWith(color: Cores.texto),
+            ),
+            const SizedBox(height: 14),
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              clipBehavior: Clip.none,
+              child: Row(
+                spacing: 8,
+                children: [
+                  for (final culinaria in culinarias)
+                    ChoiceChip(
+                      label: Text(culinaria),
+                      selected: culinaria == culinariaEscolhida,
+                      onSelected: (_) =>
+                          setState(() => culinariaEscolhida = culinaria),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 10),
 
             // Cards
-            for (final receita in receitas)
-              CardReceita(receita: receita, favoritos: widget.favoritos),
+            for (final receita in filtradas)
+              CardReceita(
+                receita: receita,
+                favoritos: widget.favoritos,
+                origem: 'home',
+              ),
           ],
         ],
       ),
@@ -136,33 +190,32 @@ class Carregando extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
 
-    Widget bloco(double largura, double altura) => Container(
+    Widget bloco(double largura, double altura, {double raio = 8}) => Container(
       width: largura,
       height: altura,
       decoration: BoxDecoration(
-        color: cores.surfaceContainerHighest,
-        borderRadius: BorderRadius.circular(8),
+        color: Cores.bege,
+        borderRadius: BorderRadius.circular(raio),
       ),
     );
 
     Widget cardVazio() => Card(
       child: Padding(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(10),
         child: Row(
           children: [
-            bloco(80, 80),
-            const SizedBox(width: 12),
+            bloco(92, 92, raio: 12),
+            const SizedBox(width: 14),
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                bloco(160, 14),
+                bloco(150, 14),
                 const SizedBox(height: 10),
-                bloco(110, 14),
-                const SizedBox(height: 22),
-                bloco(70, 14),
+                bloco(100, 14),
+                const SizedBox(height: 24),
+                bloco(60, 12),
               ],
             ),
           ],
@@ -175,11 +228,11 @@ class Carregando extends StatelessWidget {
       children: [
         Text('Explorar receitas', style: textos.headlineMedium),
         const SizedBox(height: 24),
-        bloco(double.infinity, 48),
+        bloco(double.infinity, 52, raio: 16),
         const SizedBox(height: 24),
         cardVazio(),
         cardVazio(),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -189,7 +242,10 @@ class Carregando extends StatelessWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             ),
             const SizedBox(width: 12),
-            Text('Carregando receitas…', style: textos.bodyMedium),
+            Text(
+              'Carregando receitas…',
+              style: textos.bodyMedium?.copyWith(color: Cores.texto),
+            ),
           ],
         ),
       ],

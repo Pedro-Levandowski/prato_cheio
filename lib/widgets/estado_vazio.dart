@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../tema.dart';
+
 class EstadoVazio extends StatelessWidget {
   const EstadoVazio({
     super.key,
@@ -22,24 +24,27 @@ class EstadoVazio extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cores = Theme.of(context).colorScheme;
     final textos = Theme.of(context).textTheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Center(
-          child: CircleAvatar(
-            radius: 48,
-            backgroundColor: cores.secondaryContainer,
-            child: Icon(icone, size: 40, color: cores.onSecondaryContainer),
+          child: Container(
+            width: 108,
+            height: 108,
+            decoration: const BoxDecoration(
+              color: Cores.menta,
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icone, size: 44, color: Cores.verde),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         Text(titulo, style: textos.headlineSmall),
-        const SizedBox(height: 8),
-        Text(mensagem),
-        const SizedBox(height: 24),
+        const SizedBox(height: 12),
+        Text(mensagem, style: textos.bodyLarge?.copyWith(color: Cores.texto)),
+        const SizedBox(height: 32),
         FilledButton(onPressed: onBotao, child: Text(textoBotao)),
         if (textoLink != null) ...[
           const SizedBox(height: 8),

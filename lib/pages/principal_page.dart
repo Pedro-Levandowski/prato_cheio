@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../data/favoritos.dart';
+import '../widgets/barra_navegacao.dart';
 import 'favoritos_page.dart';
 import 'home_page.dart';
 
@@ -31,25 +32,13 @@ class _PrincipalPageState extends State<PrincipalPage> {
       body: IndexedStack(
         index: abaAtual,
         children: [
-          HomePage(favoritos: favoritos),
+          HomePage(favoritos: favoritos, onFavoritos: () => irParaAba(1)),
           FavoritosPage(favoritos: favoritos, onExplorar: () => irParaAba(0)),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: abaAtual,
-        onDestinationSelected: irParaAba,
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.explore_outlined),
-            selectedIcon: Icon(Icons.explore),
-            label: 'Explorar',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.favorite_border),
-            selectedIcon: Icon(Icons.favorite),
-            label: 'Favoritos',
-          ),
-        ],
+      bottomNavigationBar: BarraNavegacao(
+        abaAtual: abaAtual,
+        onSelecionar: irParaAba,
       ),
     );
   }
