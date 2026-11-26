@@ -123,21 +123,42 @@ class FotoReceita extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final (comida, cobertura) = _sabores[(receita.id - 1) % _sabores.length];
+    final densidade = MediaQuery.devicePixelRatioOf(context);
 
     return Container(
       width: largura,
       height: altura,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: Cores.bege,
         borderRadius: BorderRadius.circular(raio),
       ),
       child: LayoutBuilder(
-        builder: (context, limites) => Center(
-          child: Prato(
-            tamanho: min(limites.maxWidth, limites.maxHeight) * escala,
-            comida: comida,
-            cobertura: cobertura,
-          ),
+        builder: (context, limites) => Stack(
+          fit: StackFit.expand,
+          children: [
+            Center(
+              child: Prato(
+                tamanho: min(limites.maxWidth, limites.maxHeight) * escala,
+                comida: comida,
+                cobertura: cobertura,
+              ),
+            ),
+            if (receita.imagem != null)
+              Image.network(
+                receita.imagem!,
+                fit: BoxFit.cover,
+                cacheWidth: (limites.maxWidth * densidade).round(),
+                frameBuilder: (context, imagem, quadro, sincrono) => sincrono
+                    ? imagem
+                    : AnimatedOpacity(
+                        opacity: quadro == null ? 0 : 1,
+                        duration: const Duration(milliseconds: 250),
+                        child: imagem,
+                      ),
+                errorBuilder: (context, erro, pilha) => const SizedBox.shrink(),
+              ),
+          ],
         ),
       ),
     );

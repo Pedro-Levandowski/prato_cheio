@@ -95,6 +95,13 @@ class _DetalhesPageState extends State<DetalhesPage> {
                       ),
                     if (receita.dificuldade != null)
                       Etiqueta.dificuldade(receita.dificuldade!),
+                    for (final tipo in receita.tiposRefeicao)
+                      Etiqueta(
+                        texto: tipo,
+                        icone: Icons.restaurant_outlined,
+                        fundo: Colors.white,
+                        cor: Cores.texto,
+                      ),
                     Etiqueta(
                       texto: receita.avaliacaoTexto,
                       icone: Icons.star_rounded,
@@ -107,12 +114,12 @@ class _DetalhesPageState extends State<DetalhesPage> {
                 Row(
                   spacing: 10,
                   children: [
-                    if (receita.tempoMinutos != null)
+                    if (receita.tempo case final tempo?)
                       Expanded(
                         child: InfoReceita(
                           icone: Icons.schedule,
-                          valor: '${receita.tempoMinutos} min',
-                          rotulo: 'tempo total',
+                          valor: '${tempo.minutos} min',
+                          rotulo: tempo.rotulo,
                         ),
                       ),
                     if (receita.porcoes != null)

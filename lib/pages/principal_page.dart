@@ -1,18 +1,22 @@
 import 'package:flutter/material.dart';
 
 import '../data/favoritos.dart';
+import '../data/receitas_api.dart';
 import '../widgets/barra_navegacao.dart';
 import 'favoritos_page.dart';
 import 'home_page.dart';
 
 class PrincipalPage extends StatefulWidget {
-  const PrincipalPage({super.key});
+  const PrincipalPage({super.key, this.api});
+
+  final ReceitasApi? api;
 
   @override
   State<PrincipalPage> createState() => _PrincipalPageState();
 }
 
 class _PrincipalPageState extends State<PrincipalPage> {
+  late final api = widget.api ?? ReceitasApi();
   final favoritos = Favoritos();
   int abaAtual = 0;
 
@@ -23,6 +27,7 @@ class _PrincipalPageState extends State<PrincipalPage> {
   @override
   void dispose() {
     favoritos.dispose();
+    api.fechar();
     super.dispose();
   }
 
@@ -32,7 +37,11 @@ class _PrincipalPageState extends State<PrincipalPage> {
       body: IndexedStack(
         index: abaAtual,
         children: [
-          HomePage(favoritos: favoritos, onFavoritos: () => irParaAba(1)),
+          HomePage(
+            api: api,
+            favoritos: favoritos,
+            onFavoritos: () => irParaAba(1),
+          ),
           FavoritosPage(favoritos: favoritos, onExplorar: () => irParaAba(0)),
         ],
       ),

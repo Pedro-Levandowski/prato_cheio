@@ -160,15 +160,6 @@ ThemeData criarTema() {
       shape: const StadiumBorder(),
       showCheckmark: false,
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-      labelStyle: WidgetStateTextStyle.resolveWith(
-        (estados) => TextStyle(
-          fontSize: 14,
-          fontWeight: FontWeight.w600,
-          color: estados.contains(WidgetState.selected)
-              ? Colors.white
-              : Cores.verdeEscuro,
-        ),
-      ),
     ),
     snackBarTheme: SnackBarThemeData(
       behavior: SnackBarBehavior.floating,

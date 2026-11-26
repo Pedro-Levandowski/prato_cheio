@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'data/receitas_api.dart';
 import 'pages/principal_page.dart';
 import 'tema.dart';
 
@@ -7,7 +8,9 @@ void main() {
 }
 
 class PratoCheioApp extends StatelessWidget {
-  const PratoCheioApp({super.key});
+  const PratoCheioApp({super.key, this.api});
+
+  final ReceitasApi? api;
 
   @override
   Widget build(BuildContext context) {
@@ -15,7 +18,7 @@ class PratoCheioApp extends StatelessWidget {
       title: 'Prato Cheio',
       debugShowCheckedModeBanner: false,
       theme: criarTema(),
-      home: const PrincipalPage(),
+      home: PrincipalPage(api: api),
     );
   }
 }

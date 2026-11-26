@@ -180,11 +180,11 @@ class TempoEDificuldade extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        if (receita.tempoMinutos != null) ...[
+        if (receita.tempo case final tempo?) ...[
           const Icon(Icons.schedule, size: 15, color: Cores.texto),
           const SizedBox(width: 4),
           Text(
-            '${receita.tempoMinutos} min',
+            '${tempo.minutos} min',
             style: Theme.of(context).textTheme.bodySmall
                 ?.copyWith(color: Cores.texto),
           ),
